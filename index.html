@@ -3,166 +3,163 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#fff8fc">
   <title>계단모임</title>
 
   <style>
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
     body {
       margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont,
-                   "Segoe UI", "Noto Sans KR", sans-serif;
-      background: #fff8fc;
+      font-family: Arial, "Noto Sans KR", sans-serif;
+      background: #fff7fc;
       color: #222;
     }
 
     .container {
-      max-width: 600px;
-      margin: auto;
-      padding: 30px 18px 70px;
+      max-width: 650px;
+      margin: 0 auto;
+      padding: 45px 20px;
     }
 
-    h1 {
+    .header {
       text-align: center;
-      margin: 10px 0 5px;
-      font-size: 30px;
+      margin-bottom: 35px;
+    }
+
+    .title {
+      font-size: 38px;
+      font-weight: 800;
+      margin-bottom: 8px;
     }
 
     .subtitle {
-      text-align: center;
+      font-size: 20px;
       color: #777;
-      margin-bottom: 12px;
     }
 
-    .version {
+    #status {
       text-align: center;
-      font-size: 11px;
-      color: #aaa;
-      margin-bottom: 10px;
-    }
-
-    .status {
-      text-align: center;
-      font-size: 13px;
-      margin-bottom: 18px;
+      margin-top: 18px;
+      font-size: 15px;
       color: #777;
     }
 
     .card {
       background: white;
-      border-radius: 20px;
-      padding: 20px;
-      margin-bottom: 18px;
-      box-shadow: 0 3px 15px rgba(0,0,0,.06);
+      border-radius: 24px;
+      padding: 28px;
+      margin-bottom: 25px;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.07);
     }
 
     h2 {
       margin-top: 0;
-      font-size: 19px;
+      font-size: 24px;
     }
 
     input {
       width: 100%;
-      padding: 14px;
-      margin-top: 10px;
-      border: 1px solid #ddd;
-      border-radius: 12px;
-      font-size: 16px;
-      background: white;
-    }
-
-    .quick {
-      display: flex;
-      gap: 6px;
-      margin-top: 8px;
-    }
-
-    .quick button {
-      flex: 1;
-      border: 0;
-      padding: 10px 3px;
-      border-radius: 10px;
-      background: #f0f0f3;
-      font-weight: 700;
-    }
-
-    .mainButton {
-      width: 100%;
-      padding: 14px;
+      padding: 18px;
       margin-top: 12px;
+      border: 1px solid #ddd;
+      border-radius: 16px;
+      font-size: 18px;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: #999;
+    }
+
+    .quick-buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .quick-buttons button {
       border: none;
-      border-radius: 12px;
+      border-radius: 14px;
+      padding: 14px 4px;
+      font-size: 17px;
+      font-weight: bold;
+      background: #f1f1f1;
+      cursor: pointer;
+    }
+
+    .save-btn {
+      width: 100%;
+      margin-top: 15px;
+      padding: 18px;
+      border: none;
+      border-radius: 16px;
+      font-size: 19px;
+      font-weight: bold;
       background: #222;
       color: white;
-      font-size: 16px;
-      font-weight: bold;
+      cursor: pointer;
     }
 
-    .mainButton:disabled {
-      opacity: .45;
+    .save-btn:disabled {
+      background: #aaa;
     }
 
-    .ranking,
-    .record {
-      padding: 13px 2px;
+    .ranking-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 4px;
       border-bottom: 1px solid #eee;
     }
 
-    .ranking:last-child,
-    .record:last-child {
+    .ranking-item:last-child {
       border-bottom: none;
     }
 
-    .ranking {
+    .rank-left {
       display: flex;
       align-items: center;
+      gap: 12px;
     }
 
-    .rankNo {
-      width: 45px;
+    .rank-number {
+      width: 36px;
+      font-size: 22px;
+      font-weight: bold;
       text-align: center;
-      font-size: 18px;
     }
 
-    .rankName {
-      flex: 1;
-      font-weight: 700;
+    .name {
+      font-size: 19px;
+      font-weight: bold;
     }
 
-    .rankFloor {
-      font-weight: 800;
+    .floor {
+      font-size: 20px;
+      font-weight: bold;
     }
 
-    .record {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .recordName {
-      font-weight: 700;
-    }
-
-    .recordInfo {
-      margin-top: 4px;
-      font-size: 13px;
-      color: #777;
-    }
-
-    .deleteButton {
-      border: 0;
-      padding: 7px 9px;
-      border-radius: 9px;
-      background: #f0f0f0;
-      color: #777;
+    .time {
+      margin-top: 5px;
+      font-size: 12px;
+      color: #999;
     }
 
     .empty {
       text-align: center;
-      padding: 20px 0;
-      color: #999;
+      padding: 30px 0;
+      color: #aaa;
+    }
+
+    .delete-btn {
+      border: none;
+      background: none;
+      font-size: 18px;
+      cursor: pointer;
+      margin-left: 8px;
     }
   </style>
 </head>
@@ -171,65 +168,56 @@
 
 <div class="container">
 
-  <h1>🪜 계단모임</h1>
-  <div class="subtitle">오늘도 한 층씩 💪</div>
-  <div class="version">WEB v3</div>
-
-  <div id="status" class="status">
-    🔄 Firebase 연결 중...
+  <div class="header">
+    <div class="title">🪜 계단모임</div>
+    <div class="subtitle">오늘도 한 층씩 💪</div>
+    <div id="status">🔄 Firebase 연결 중...</div>
   </div>
 
   <div class="card">
+
     <h2>📝 계단 기록하기</h2>
 
     <input
       id="name"
       type="text"
-      maxlength="20"
       placeholder="이름"
+      maxlength="20"
     >
 
     <input
-      id="floors"
+      id="floor"
       type="number"
-      inputmode="numeric"
-      min="1"
-      max="9999"
       placeholder="몇 층?"
+      min="1"
     >
 
-    <div class="quick">
-      <button type="button" data-add="10">+10</button>
-      <button type="button" data-add="20">+20</button>
-      <button type="button" data-add="25">+25</button>
-      <button type="button" data-add="30">+30</button>
+    <div class="quick-buttons">
+      <button onclick="setFloor(10)">+10</button>
+      <button onclick="setFloor(20)">+20</button>
+      <button onclick="setFloor(25)">+25</button>
+      <button onclick="setFloor(30)">+30</button>
     </div>
 
     <button
       id="saveButton"
-      class="mainButton"
+      class="save-btn"
+      onclick="saveRecord()"
       disabled
     >
       연결 중...
     </button>
+
   </div>
 
-
   <div class="card">
+
     <h2>🏆 실시간 랭킹</h2>
 
     <div id="ranking">
       <div class="empty">불러오는 중...</div>
     </div>
-  </div>
 
-
-  <div class="card">
-    <h2>📋 최근 기록</h2>
-
-    <div id="records">
-      <div class="empty">불러오는 중...</div>
-    </div>
   </div>
 
 </div>
@@ -237,14 +225,14 @@
 
 <script type="module">
 
-import {
-  initializeApp
-} from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
 
 import {
   getAuth,
   signInAnonymously
-} from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+}
+from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 
 import {
   getFirestore,
@@ -252,150 +240,74 @@ import {
   addDoc,
   deleteDoc,
   doc,
-  onSnapshot,
-  serverTimestamp,
   query,
-  orderBy
-} from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+  orderBy,
+  onSnapshot,
+  serverTimestamp
+}
+from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
-
-/* ===============================
-   Firebase 웹 앱 설정
-================================ */
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBjJlAoro5jzAtDUYX9BgtDdM3v0C6ctTY",
+
+  apiKey: "AIzaSyBjJ1Aoro5jzAtDUYX9BgtDdM3v0C6ctTY",
+
   authDomain: "stairs-2dd28.firebaseapp.com",
+
   projectId: "stairs-2dd28",
+
   storageBucket: "stairs-2dd28.firebasestorage.app",
+
   messagingSenderId: "950051763953",
+
   appId: "1:950051763953:web:6fad2beffc2bf5fe481b50",
+
   measurementId: "G-E3B4HGKMFR"
+
 };
 
 
-/* ===============================
-   초기화
-================================ */
-
 const app = initializeApp(firebaseConfig);
+
 const auth = getAuth(app);
+
 const db = getFirestore(app);
 
-const statusBox =
+
+const status =
   document.getElementById("status");
-
-const nameInput =
-  document.getElementById("name");
-
-const floorsInput =
-  document.getElementById("floors");
 
 const saveButton =
   document.getElementById("saveButton");
 
-const rankingBox =
-  document.getElementById("ranking");
 
-const recordsBox =
-  document.getElementById("records");
+let connected = false;
 
 
-/* ===============================
-   이름 기억
-================================ */
-
-const savedName =
-  localStorage.getItem("stairs-name");
-
-if (savedName) {
-  nameInput.value = savedName;
-}
-
-
-/* ===============================
-   +10 +20 +25 +30
-================================ */
-
-document
-  .querySelectorAll("[data-add]")
-  .forEach(button => {
-
-    button.addEventListener(
-      "click",
-      () => {
-
-        const add =
-          Number(button.dataset.add);
-
-        const old =
-          Number(floorsInput.value) || 0;
-
-        floorsInput.value =
-          old + add;
-
-      }
-    );
-
-  });
-
-
-/* ===============================
-   오늘 날짜
-================================ */
-
-function getToday() {
-
-  const now =
-    new Date();
-
-  const year =
-    now.getFullYear();
-
-  const month =
-    String(
-      now.getMonth() + 1
-    ).padStart(2, "0");
-
-  const day =
-    String(
-      now.getDate()
-    ).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
-}
-
-
-/* ===============================
+/* ---------------------------
    익명 로그인
-================================ */
+--------------------------- */
 
-async function start() {
+async function startFirebase() {
 
   try {
 
-    statusBox.textContent =
+    status.textContent =
       "🔄 익명 로그인 중...";
 
-    const result =
-      await signInAnonymously(auth);
+    await signInAnonymously(auth);
 
-    if (!result.user) {
-      throw new Error(
-        "익명 사용자 생성 실패"
-      );
-    }
+    connected = true;
 
-    statusBox.textContent =
+    status.textContent =
       "🟢 실시간 연결됨";
 
-    saveButton.disabled =
-      false;
+    saveButton.disabled = false;
 
     saveButton.textContent =
       "기록 저장";
 
-    startRealtime();
+    startRealtimeRanking();
 
   }
 
@@ -403,14 +315,13 @@ async function start() {
 
     console.error(error);
 
-    statusBox.textContent =
-      "🔴 Firebase 로그인 오류";
+    status.textContent =
+      "🔴 Firebase 연결 오류";
 
-    saveButton.disabled =
-      true;
+    saveButton.disabled = true;
 
     saveButton.textContent =
-      "연결 실패";
+      "연결 오류";
 
     alert(
       "Firebase 로그인에 실패했습니다.\n\n" +
@@ -420,145 +331,174 @@ async function start() {
     );
 
   }
+
 }
 
 
-/* ===============================
+/* ---------------------------
+   빠른 층수 선택
+--------------------------- */
+
+window.setFloor = function(floor) {
+
+  document.getElementById("floor").value =
+    floor;
+
+};
+
+
+/* ---------------------------
    기록 저장
-================================ */
+--------------------------- */
 
-saveButton.addEventListener(
-  "click",
-  async () => {
+window.saveRecord = async function() {
 
-    const name =
-      nameInput.value.trim();
+  if (!connected) {
 
-    const floors =
-      Number(floorsInput.value);
+    alert("Firebase 연결 중입니다.");
 
+    return;
 
-    if (!name) {
-
-      alert(
-        "이름을 입력해주세요."
-      );
-
-      return;
-    }
+  }
 
 
-    if (
-      !Number.isInteger(floors) ||
-      floors < 1 ||
-      floors > 9999
-    ) {
+  const name =
+    document.getElementById("name")
+      .value
+      .trim();
 
-      alert(
-        "올바른 층수를 입력해주세요."
-      );
-
-      return;
-    }
+  const floor =
+    Number(
+      document.getElementById("floor")
+        .value
+    );
 
 
-    if (!auth.currentUser) {
+  if (!name) {
 
-      alert(
-        "Firebase 로그인 중입니다."
-      );
+    alert("이름을 입력해주세요.");
 
-      return;
-    }
+    return;
 
-
-    try {
-
-      saveButton.disabled =
-        true;
-
-      saveButton.textContent =
-        "저장 중...";
+  }
 
 
-      await addDoc(
-        collection(
-          db,
-          "records"
-        ),
-        {
+  if (!floor || floor < 1) {
 
-          uid:
-            auth.currentUser.uid,
+    alert("층수를 입력해주세요.");
 
-          name:
-            name,
+    return;
 
-          floors:
-            floors,
-
-          date:
-            getToday(),
-
-          createdAt:
-            serverTimestamp()
-
-        }
-      );
+  }
 
 
-      localStorage.setItem(
-        "stairs-name",
-        name
-      );
+  try {
 
-      floorsInput.value = "";
+    saveButton.disabled = true;
 
-    }
+    saveButton.textContent =
+      "저장 중...";
 
-    catch (error) {
 
-      console.error(error);
+    await addDoc(
+      collection(db, "records"),
+      {
+        name: name,
+        floor: floor,
+        createdAt: serverTimestamp()
+      }
+    );
 
-      alert(
-        "저장 실패\n\n" +
-        error.code +
-        "\n\n" +
-        error.message
-      );
 
-    }
+    document.getElementById("floor").value =
+      "";
 
-    finally {
 
-      saveButton.disabled =
-        false;
+    saveButton.textContent =
+      "저장 완료!";
+
+
+    setTimeout(() => {
+
+      saveButton.disabled = false;
 
       saveButton.textContent =
         "기록 저장";
 
-    }
+    }, 700);
 
   }
-);
+
+  catch (error) {
+
+    console.error(error);
+
+    alert(
+      "저장 실패\n\n" +
+      error.code +
+      "\n" +
+      error.message
+    );
+
+    saveButton.disabled = false;
+
+    saveButton.textContent =
+      "기록 저장";
+
+  }
+
+};
 
 
-/* ===============================
-   실시간 Firestore
-================================ */
+/* ---------------------------
+   기록 삭제
+--------------------------- */
 
-function startRealtime() {
+window.deleteRecord =
+async function(id) {
+
+  const ok =
+    confirm("이 기록을 삭제할까요?");
+
+  if (!ok) return;
+
+
+  try {
+
+    await deleteDoc(
+      doc(db, "records", id)
+    );
+
+  }
+
+  catch (error) {
+
+    console.error(error);
+
+    alert(
+      "삭제 실패\n" +
+      error.message
+    );
+
+  }
+
+};
+
+
+/* ---------------------------
+   실시간 랭킹
+--------------------------- */
+
+function startRealtimeRanking() {
+
+  const ranking =
+    document.getElementById("ranking");
+
 
   const q =
     query(
-      collection(
-        db,
-        "records"
-      ),
-      orderBy(
-        "createdAt",
-        "desc"
-      )
+      collection(db, "records"),
+      orderBy("floor", "desc")
     );
 
 
@@ -567,27 +507,116 @@ function startRealtime() {
 
     snapshot => {
 
-      const list = [];
+      ranking.innerHTML = "";
 
 
-      snapshot.forEach(
-        item => {
+      if (snapshot.empty) {
 
-          list.push({
-            id: item.id,
-            ...item.data()
-          });
+        ranking.innerHTML =
+          '<div class="empty">아직 기록이 없어요 🪜</div>';
+
+        return;
+
+      }
+
+
+      let rank = 1;
+
+
+      snapshot.forEach(item => {
+
+        const data =
+          item.data();
+
+
+        let medal =
+          rank;
+
+
+        if (rank === 1)
+          medal = "🥇";
+
+        if (rank === 2)
+          medal = "🥈";
+
+        if (rank === 3)
+          medal = "🥉";
+
+
+        let timeText = "";
+
+
+        if (
+          data.createdAt &&
+          data.createdAt.toDate
+        ) {
+
+          const date =
+            data.createdAt.toDate();
+
+          timeText =
+            date.toLocaleString(
+              "ko-KR"
+            );
 
         }
-      );
 
 
-      statusBox.textContent =
-        "🟢 실시간 연결됨";
+        const div =
+          document.createElement("div");
 
-      showRanking(list);
 
-      showRecords(list);
+        div.className =
+          "ranking-item";
+
+
+        div.innerHTML = `
+
+          <div class="rank-left">
+
+            <div class="rank-number">
+              ${medal}
+            </div>
+
+            <div>
+
+              <div class="name">
+                ${escapeHtml(data.name)}
+              </div>
+
+              <div class="time">
+                ${timeText}
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <div>
+
+            <span class="floor">
+              ${data.floor}층
+            </span>
+
+            <button
+              class="delete-btn"
+              onclick="deleteRecord('${item.id}')"
+            >
+              🗑️
+            </button>
+
+          </div>
+
+        `;
+
+
+        ranking.appendChild(div);
+
+
+        rank++;
+
+      });
 
     },
 
@@ -595,344 +624,45 @@ function startRealtime() {
 
       console.error(error);
 
-      statusBox.textContent =
-        "🔴 Firestore 연결 오류";
+      ranking.innerHTML =
+        '<div class="empty">랭킹을 불러오지 못했습니다.</div>';
 
       alert(
-        "Firestore 오류\n\n" +
+        "Firestore 읽기 오류\n\n" +
         error.code +
-        "\n\n" +
+        "\n" +
         error.message
       );
 
     }
+
   );
 
 }
 
 
-/* ===============================
-   랭킹
-================================ */
+/* ---------------------------
+   HTML 문자 처리
+--------------------------- */
 
-function showRanking(list) {
+function escapeHtml(text) {
 
-  const totals = {};
+  const div =
+    document.createElement("div");
 
+  div.textContent =
+    text || "";
 
-  list.forEach(
-    item => {
-
-      const name =
-        item.name ||
-        "이름 없음";
-
-      const floors =
-        Number(
-          item.floors || 0
-        );
-
-
-      if (!totals[name]) {
-
-        totals[name] = 0;
-
-      }
-
-      totals[name] += floors;
-
-    }
-  );
-
-
-  const ranking =
-    Object.entries(totals)
-      .sort(
-        (a, b) =>
-          b[1] - a[1]
-      );
-
-
-  rankingBox.innerHTML = "";
-
-
-  if (
-    ranking.length === 0
-  ) {
-
-    rankingBox.innerHTML =
-      '<div class="empty">아직 기록이 없어요.</div>';
-
-    return;
-  }
-
-
-  ranking.forEach(
-    ([name, floors], index) => {
-
-      let medal;
-
-      if (index === 0) {
-        medal = "🥇";
-      }
-
-      else if (index === 1) {
-        medal = "🥈";
-      }
-
-      else if (index === 2) {
-        medal = "🥉";
-      }
-
-      else {
-        medal =
-          `${index + 1}.`;
-      }
-
-
-      const row =
-        document.createElement(
-          "div"
-        );
-
-      row.className =
-        "ranking";
-
-
-      const rank =
-        document.createElement(
-          "div"
-        );
-
-      rank.className =
-        "rankNo";
-
-      rank.textContent =
-        medal;
-
-
-      const person =
-        document.createElement(
-          "div"
-        );
-
-      person.className =
-        "rankName";
-
-      person.textContent =
-        name;
-
-
-      const total =
-        document.createElement(
-          "div"
-        );
-
-      total.className =
-        "rankFloor";
-
-      total.textContent =
-        `${floors}층`;
-
-
-      row.appendChild(rank);
-
-      row.appendChild(person);
-
-      row.appendChild(total);
-
-      rankingBox.appendChild(row);
-
-    }
-  );
+  return div.innerHTML;
 
 }
 
 
-/* ===============================
-   최근 기록
-================================ */
-
-function showRecords(list) {
-
-  recordsBox.innerHTML = "";
-
-
-  if (list.length === 0) {
-
-    recordsBox.innerHTML =
-      '<div class="empty">아직 기록이 없어요.</div>';
-
-    return;
-  }
-
-
-  list
-    .slice(0, 30)
-    .forEach(
-      item => {
-
-        const row =
-          document.createElement(
-            "div"
-          );
-
-        row.className =
-          "record";
-
-
-        const left =
-          document.createElement(
-            "div"
-          );
-
-
-        const name =
-          document.createElement(
-            "div"
-          );
-
-        name.className =
-          "recordName";
-
-        name.textContent =
-          item.name ||
-          "이름 없음";
-
-
-        const info =
-          document.createElement(
-            "div"
-          );
-
-        info.className =
-          "recordInfo";
-
-
-        const floors =
-          Number(
-            item.floors || 0
-          );
-
-
-        let dateText =
-          item.date || "";
-
-
-        if (
-          item.createdAt &&
-          typeof
-            item.createdAt.toDate
-            === "function"
-        ) {
-
-          dateText =
-            item.createdAt
-              .toDate()
-              .toLocaleString(
-                "ko-KR",
-                {
-                  month: "numeric",
-                  day: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit"
-                }
-              );
-        }
-
-
-        info.textContent =
-          `${floors}층 · ${dateText}`;
-
-
-        left.appendChild(name);
-
-        left.appendChild(info);
-
-        row.appendChild(left);
-
-
-        /*
-          본인이 웹에서 입력한 기록만
-          삭제 버튼 표시
-        */
-
-        if (
-          auth.currentUser &&
-          item.uid ===
-            auth.currentUser.uid
-        ) {
-
-          const del =
-            document.createElement(
-              "button"
-            );
-
-          del.className =
-            "deleteButton";
-
-          del.textContent =
-            "삭제";
-
-
-          del.onclick =
-            async () => {
-
-              if (
-                !confirm(
-                  "이 기록을 삭제할까요?"
-                )
-              ) {
-                return;
-              }
-
-
-              try {
-
-                await deleteDoc(
-                  doc(
-                    db,
-                    "records",
-                    item.id
-                  )
-                );
-
-              }
-
-              catch (error) {
-
-                alert(
-                  "삭제 실패\n\n" +
-                  error.code +
-                  "\n\n" +
-                  error.message
-                );
-
-              }
-
-            };
-
-
-          row.appendChild(del);
-
-        }
-
-
-        recordsBox.appendChild(
-          row
-        );
-
-      }
-    );
-
-}
-
-
-/* ===============================
+/* ---------------------------
    시작
-================================ */
+--------------------------- */
 
-start();
+startFirebase();
 
 </script>
 
