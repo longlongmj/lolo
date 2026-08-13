@@ -19,18 +19,27 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.firebase.Timestamp
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import java.time.LocalDate
 import java.time.YearMonth
 
 data class Record(
-    val name: String,
-    val floors: Int,
-    val date: String
+    val id: String = "",
+    val uid: String = "",
+    val name: String = "",
+    val floors: Int = 0,
+    val date: String = "",
+    val createdAt: Timestamp? = null
 )
 
 class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContent {
             StairApp(this)
         }
@@ -41,53 +50,40 @@ class MainActivity : ComponentActivity() {
 fun StairApp(context: Context) {
 
     val prefs = remember {
-        context.getSharedPreferences("stairs", Context.MODE_PRIVATE)
+        context.getSharedPreferences(
+            "stairs",
+            Context.MODE_PRIVATE
+        )
+    }
+
+    val auth = remember {
+        FirebaseAuth.getInstance()
+    }
+
+    val db = remember {
+        FirebaseFirestore.getInstance()
     }
 
     var myName by remember {
-        mutableStateOf(prefs.getString("name", "") ?: "")
+        mutableStateOf(
+            prefs.getString("name", "") ?: ""
+        )
+    }
+
+    var uid by remember {
+        mutableStateOf(
+            auth.currentUser?.uid ?: ""
+        )
     }
 
     val records = remember {
-        mutableStateListOf<Record>().apply {
-            val text = prefs.getString("records", "") ?: ""
-
-            if (text.isNotBlank()) {
-                text.lines().forEach { line ->
-                    val p = line.split("|")
-
-                    if (p.size == 3) {
-                        val floor = p[1].toIntOrNull()
-
-                        if (floor != null) {
-                            add(
-                                Record(
-                                    p[0],
-                                    floor,
-                                    p[2]
-                                )
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    fun save() {
-        prefs.edit()
-            .putString("name", myName)
-            .putString(
-                "records",
-                records.joinToString("\n") {
-                    "${it.name}|${it.floors}|${it.date}"
-                }
-            )
-            .apply()
+        mutableStateListOf<Record>()
     }
 
     var month by remember {
-        mutableStateOf(YearMonth.now())
+        mutableStateOf(
+            YearMonth.now()
+        )
     }
 
     var selectedDate by remember {
@@ -95,31 +91,144 @@ fun StairApp(context: Context) {
     }
 
     var showName by remember {
-        mutableStateOf(myName.isBlank())
+        mutableStateOf(
+            myName.isBlank()
+        )
     }
 
     var rankMode by remember {
         mutableStateOf("month")
     }
 
+    var status by remember {
+        mutableStateOf("연결 중")
+    }
+
+    LaunchedEffect(Unit) {
+
+        if (auth.currentUser == null) {
+
+            auth.signInAnonymously()
+                .addOnSuccessListener {
+
+                    uid =
+                        it.user?.uid ?: ""
+
+                    status = "LIVE"
+                }
+                .addOnFailureListener {
+
+                    status = "로그인 오류"
+                }
+
+        } else {
+
+            uid =
+                auth.currentUser?.uid ?: ""
+
+            status = "LIVE"
+        }
+    }
+
+    DisposableEffect(Unit) {
+
+        val listener =
+            db.collection("records")
+                .orderBy(
+                    "createdAt",
+                    Query.Direction.DESCENDING
+                )
+                .addSnapshotListener {
+                        snapshot,
+                        error ->
+
+                    if (error != null) {
+
+                        status =
+                            "동기화 오류"
+
+                        return@addSnapshotListener
+                    }
+
+                    records.clear()
+
+                    snapshot
+                        ?.documents
+                        ?.forEach { document ->
+
+                            records.add(
+                                Record(
+                                    id =
+                                        document.id,
+
+                                    uid =
+                                        document
+                                            .getString("uid")
+                                            ?: "",
+
+                                    name =
+                                        document
+                                            .getString("name")
+                                            ?: "",
+
+                                    floors =
+                                        (
+                                            document
+                                                .getLong("floors")
+                                                ?: 0
+                                        ).toInt(),
+
+                                    date =
+                                        document
+                                            .getString("date")
+                                            ?: "",
+
+                                    createdAt =
+                                        document
+                                            .getTimestamp(
+                                                "createdAt"
+                                            )
+                                )
+                            )
+                        }
+
+                    status = "LIVE"
+                }
+
+        onDispose {
+            listener.remove()
+        }
+    }
+
     MaterialTheme {
 
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color(0xFFF5F6F8))
-                .padding(14.dp)
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .background(
+                        Color(0xFFF5F6F8)
+                    )
+                    .padding(14.dp)
         ) {
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(
+                Modifier.height(10.dp)
+            )
 
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                modifier =
+                    Modifier.fillMaxWidth(),
+
+                horizontalArrangement =
+                    Arrangement.SpaceBetween,
+
+                verticalAlignment =
+                    Alignment.CenterVertically
             ) {
 
                 Column {
+
                     Text(
                         "STAIRS CLUB",
                         fontSize = 10.sp,
@@ -129,53 +238,103 @@ fun StairApp(context: Context) {
                     Text(
                         "🪜 계단모임",
                         fontSize = 28.sp,
-                        fontWeight = FontWeight.Black
+                        fontWeight =
+                            FontWeight.Black
                     )
 
                     Text(
-                        "오늘도 한 층씩!",
-                        fontSize = 12.sp,
+                        "모두의 계단 기록이 실시간으로 올라와요",
+                        fontSize = 11.sp,
                         color = Color.Gray
                     )
                 }
 
-                Button(
-                    onClick = {
-                        showName = true
-                    }
+                Column(
+                    horizontalAlignment =
+                        Alignment.End
                 ) {
-                    Text(
-                        if (myName.isBlank())
-                            "이름 설정"
-                        else
-                            myName
-                    )
+
+                    Surface(
+                        color =
+                            if (status == "LIVE")
+                                Color(0xFFE8F7F0)
+                            else
+                                Color(0xFFFFF1E8),
+
+                        shape =
+                            RoundedCornerShape(
+                                20.dp
+                            )
+                    ) {
+
+                        Text(
+                            "● $status",
+
+                            modifier =
+                                Modifier.padding(
+                                    horizontal = 10.dp,
+                                    vertical = 6.dp
+                                ),
+
+                            fontSize = 10.sp
+                        )
+                    }
+
+                    TextButton(
+                        onClick = {
+                            showName = true
+                        }
+                    ) {
+
+                        Text(
+                            if (myName.isBlank())
+                                "이름 설정"
+                            else
+                                myName
+                        )
+                    }
                 }
             }
 
-            Spacer(Modifier.height(14.dp))
+            Spacer(
+                Modifier.height(12.dp)
+            )
 
             Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(22.dp),
+                modifier =
+                    Modifier.fillMaxWidth(),
+
+                shape =
+                    RoundedCornerShape(
+                        22.dp
+                    ),
+
                 color = Color.White
             ) {
 
                 Column(
-                    modifier = Modifier.padding(12.dp)
+                    modifier =
+                        Modifier.padding(12.dp)
                 ) {
 
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                        modifier =
+                            Modifier.fillMaxWidth(),
+
+                        horizontalArrangement =
+                            Arrangement.SpaceBetween,
+
+                        verticalAlignment =
+                            Alignment.CenterVertically
                     ) {
 
                         IconButton(
                             onClick = {
-                                month = month.minusMonths(1)
+                                month =
+                                    month.minusMonths(1)
                             }
                         ) {
+
                             Icon(
                                 Icons.Default.KeyboardArrowLeft,
                                 null
@@ -184,21 +343,28 @@ fun StairApp(context: Context) {
 
                         TextButton(
                             onClick = {
-                                month = YearMonth.now()
+                                month =
+                                    YearMonth.now()
                             }
                         ) {
+
                             Text(
                                 "${month.year}년 ${month.monthValue}월",
+
                                 fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold
+
+                                fontWeight =
+                                    FontWeight.Bold
                             )
                         }
 
                         IconButton(
                             onClick = {
-                                month = month.plusMonths(1)
+                                month =
+                                    month.plusMonths(1)
                             }
                         ) {
+
                             Icon(
                                 Icons.Default.KeyboardArrowRight,
                                 null
@@ -207,26 +373,42 @@ fun StairApp(context: Context) {
                     }
 
                     Row(
-                        modifier = Modifier.fillMaxWidth()
+                        modifier =
+                            Modifier.fillMaxWidth()
                     ) {
 
                         listOf(
-                            "일","월","화","수","목","금","토"
+                            "일",
+                            "월",
+                            "화",
+                            "수",
+                            "목",
+                            "금",
+                            "토"
                         ).forEach {
 
                             Text(
                                 it,
-                                modifier = Modifier.weight(1f),
-                                textAlign = TextAlign.Center,
+
+                                modifier =
+                                    Modifier.weight(1f),
+
+                                textAlign =
+                                    TextAlign.Center,
+
                                 fontSize = 11.sp,
+
                                 color = Color.Gray
                             )
                         }
                     }
 
-                    Spacer(Modifier.height(6.dp))
+                    Spacer(
+                        Modifier.height(6.dp)
+                    )
 
-                    val firstDay = month.atDay(1)
+                    val firstDay =
+                        month.atDay(1)
 
                     val offset =
                         firstDay.dayOfWeek.value % 7
@@ -237,7 +419,8 @@ fun StairApp(context: Context) {
                     repeat(6) { week ->
 
                         Row(
-                            modifier = Modifier.fillMaxWidth()
+                            modifier =
+                                Modifier.fillMaxWidth()
                         ) {
 
                             repeat(7) { column ->
@@ -255,11 +438,12 @@ fun StairApp(context: Context) {
                                     val date =
                                         month.atDay(day)
 
-                                    val floor =
+                                    val myFloor =
                                         records
                                             .filter {
-                                                it.name == myName &&
-                                                it.date == date.toString()
+                                                it.uid == uid &&
+                                                it.date ==
+                                                    date.toString()
                                             }
                                             .sumOf {
                                                 it.floors
@@ -267,39 +451,65 @@ fun StairApp(context: Context) {
 
                                     Surface(
                                         onClick = {
-                                            selectedDate = date
+                                            selectedDate =
+                                                date
                                         },
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .padding(2.dp)
-                                            .height(61.dp),
-                                        shape = RoundedCornerShape(12.dp),
+
+                                        modifier =
+                                            Modifier
+                                                .weight(1f)
+                                                .padding(2.dp)
+                                                .height(61.dp),
+
+                                        shape =
+                                            RoundedCornerShape(
+                                                12.dp
+                                            ),
+
                                         color =
-                                            if (floor > 0)
-                                                Color(0xFFEDEEF2)
+                                            if (myFloor > 0)
+                                                Color(
+                                                    0xFFEDEEF2
+                                                )
                                             else
-                                                Color(0xFFFAFAFA)
+                                                Color(
+                                                    0xFFFAFAFA
+                                                )
                                     ) {
 
                                         Column(
-                                            modifier = Modifier.padding(6.dp)
+                                            modifier =
+                                                Modifier.padding(
+                                                    6.dp
+                                                )
                                         ) {
 
                                             Text(
                                                 "$day",
-                                                fontSize = 11.sp,
-                                                fontWeight = FontWeight.Bold
+
+                                                fontSize =
+                                                    11.sp,
+
+                                                fontWeight =
+                                                    FontWeight.Bold
                                             )
 
                                             Spacer(
                                                 Modifier.weight(1f)
                                             )
 
-                                            if (floor > 0) {
+                                            if (
+                                                myFloor > 0
+                                            ) {
+
                                                 Text(
-                                                    "${floor}층",
-                                                    fontSize = 11.sp,
-                                                    fontWeight = FontWeight.Black
+                                                    "${myFloor}층",
+
+                                                    fontSize =
+                                                        11.sp,
+
+                                                    fontWeight =
+                                                        FontWeight.Black
                                                 )
                                             }
                                         }
@@ -308,9 +518,10 @@ fun StairApp(context: Context) {
                                 } else {
 
                                     Spacer(
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .height(61.dp)
+                                        modifier =
+                                            Modifier
+                                                .weight(1f)
+                                                .height(61.dp)
                                     )
                                 }
                             }
@@ -319,7 +530,9 @@ fun StairApp(context: Context) {
                 }
             }
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(
+                Modifier.height(10.dp)
+            )
 
             val thisMonth =
                 month.toString()
@@ -327,60 +540,80 @@ fun StairApp(context: Context) {
             val myTotal =
                 records
                     .filter {
-                        it.name == myName &&
-                        it.date.startsWith(thisMonth)
+                        it.uid == uid &&
+                        it.date.startsWith(
+                            thisMonth
+                        )
                     }
                     .sumOf {
                         it.floors
                     }
 
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(18.dp),
-                color = Color.White
+            val clubTotal =
+                records
+                    .filter {
+                        it.date.startsWith(
+                            thisMonth
+                        )
+                    }
+                    .sumOf {
+                        it.floors
+                    }
+
+            Row(
+                horizontalArrangement =
+                    Arrangement.spacedBy(
+                        7.dp
+                    )
             ) {
 
-                Column(
-                    modifier = Modifier.padding(15.dp)
-                ) {
+                StatCard(
+                    "내 이번 달",
+                    myTotal,
+                    Modifier.weight(1f)
+                )
 
-                    Text(
-                        "내 이번 달",
-                        fontSize = 11.sp,
-                        color = Color.Gray
-                    )
-
-                    Text(
-                        "${myTotal}층",
-                        fontSize = 25.sp,
-                        fontWeight = FontWeight.Black
-                    )
-                }
+                StatCard(
+                    "모임 이번 달",
+                    clubTotal,
+                    Modifier.weight(1f)
+                )
             }
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(
+                Modifier.height(10.dp)
+            )
 
             Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(22.dp),
+                modifier =
+                    Modifier.fillMaxWidth(),
+
+                shape =
+                    RoundedCornerShape(
+                        22.dp
+                    ),
+
                 color = Color.White
             ) {
 
                 Column(
-                    modifier = Modifier.padding(14.dp)
+                    modifier =
+                        Modifier.padding(14.dp)
                 ) {
 
                     Text(
-                        "🏆 랭킹",
+                        "🏆 실시간 랭킹",
                         fontSize = 18.sp,
-                        fontWeight = FontWeight.Black
+                        fontWeight =
+                            FontWeight.Black
                     )
 
                     Row {
 
                         TextButton(
                             onClick = {
-                                rankMode = "month"
+                                rankMode =
+                                    "month"
                             }
                         ) {
                             Text("이번 달")
@@ -388,7 +621,8 @@ fun StairApp(context: Context) {
 
                         TextButton(
                             onClick = {
-                                rankMode = "all"
+                                rankMode =
+                                    "all"
                             }
                         ) {
                             Text("누적")
@@ -396,7 +630,8 @@ fun StairApp(context: Context) {
 
                         TextButton(
                             onClick = {
-                                rankMode = "today"
+                                rankMode =
+                                    "today"
                             }
                         ) {
                             Text("오늘")
@@ -404,14 +639,16 @@ fun StairApp(context: Context) {
                     }
 
                     val today =
-                        LocalDate.now().toString()
+                        LocalDate.now()
+                            .toString()
 
                     val filtered =
                         when (rankMode) {
 
                             "today" ->
                                 records.filter {
-                                    it.date == today
+                                    it.date ==
+                                        today
                                 }
 
                             "all" ->
@@ -431,10 +668,14 @@ fun StairApp(context: Context) {
                                 it.name
                             }
                             .map {
+
                                 Pair(
                                     it.key,
-                                    it.value.sumOf {
-                                            r -> r.floors
+
+                                    it.value
+                                        .sumOf {
+                                                record ->
+                                            record.floors
                                         }
                                 )
                             }
@@ -442,63 +683,87 @@ fun StairApp(context: Context) {
                                 it.second
                             }
 
-                    if (ranking.isEmpty()) {
+                    if (
+                        ranking.isEmpty()
+                    ) {
 
                         Text(
                             "아직 기록이 없어요.",
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(20.dp),
-                            textAlign = TextAlign.Center,
+
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(20.dp),
+
+                            textAlign =
+                                TextAlign.Center,
+
                             color = Color.Gray
                         )
 
                     } else {
 
-                        ranking.forEachIndexed {
-                            index,
-                            data ->
+                        ranking
+                            .forEachIndexed {
+                                    index,
+                                    data ->
 
-                            val medal =
-                                when (index) {
-                                    0 -> "🥇"
-                                    1 -> "🥈"
-                                    2 -> "🥉"
-                                    else ->
-                                        "${index + 1}"
+                                val medal =
+                                    when (index) {
+
+                                        0 -> "🥇"
+                                        1 -> "🥈"
+                                        2 -> "🥉"
+
+                                        else ->
+                                            "${index + 1}"
+                                    }
+
+                                Row(
+                                    modifier =
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .padding(
+                                                vertical =
+                                                    9.dp
+                                            ),
+
+                                    verticalAlignment =
+                                        Alignment.CenterVertically
+                                ) {
+
+                                    Text(
+                                        medal,
+
+                                        modifier =
+                                            Modifier.width(
+                                                42.dp
+                                            ),
+
+                                        textAlign =
+                                            TextAlign.Center
+                                    )
+
+                                    Text(
+                                        data.first,
+
+                                        modifier =
+                                            Modifier.weight(
+                                                1f
+                                            ),
+
+                                        fontWeight =
+                                            FontWeight.Bold
+                                    )
+
+                                    Text(
+                                        "${data.second}층",
+
+                                        fontWeight =
+                                            FontWeight.Black
+                                    )
                                 }
-
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 9.dp),
-                                verticalAlignment =
-                                    Alignment.CenterVertically
-                            ) {
-
-                                Text(
-                                    medal,
-                                    modifier =
-                                        Modifier.width(42.dp),
-                                    textAlign =
-                                        TextAlign.Center
-                                )
-
-                                Text(
-                                    data.first,
-                                    modifier =
-                                        Modifier.weight(1f),
-                                    fontWeight =
-                                        FontWeight.Bold
-                                )
-
-                                Text(
-                                    "${data.second}층",
-                                    fontWeight =
-                                        FontWeight.Black
-                                )
                             }
-                        }
                     }
                 }
             }
@@ -507,12 +772,17 @@ fun StairApp(context: Context) {
         if (showName) {
 
             var tempName by remember {
-                mutableStateOf(myName)
+                mutableStateOf(
+                    myName
+                )
             }
 
             AlertDialog(
                 onDismissRequest = {
-                    if (myName.isNotBlank()) {
+
+                    if (
+                        myName.isNotBlank()
+                    ) {
                         showName = false
                     }
                 },
@@ -525,9 +795,12 @@ fun StairApp(context: Context) {
 
                     OutlinedTextField(
                         value = tempName,
+
                         onValueChange = {
-                            tempName = it.take(20)
+                            tempName =
+                                it.take(20)
                         },
+
                         placeholder = {
                             Text("예: 밍리")
                         }
@@ -546,12 +819,19 @@ fun StairApp(context: Context) {
                                 myName =
                                     tempName.trim()
 
-                                save()
+                                prefs.edit()
+                                    .putString(
+                                        "name",
+                                        myName
+                                    )
+                                    .apply()
 
-                                showName = false
+                                showName =
+                                    false
                             }
                         }
                     ) {
+
                         Text("저장")
                     }
                 }
@@ -560,8 +840,25 @@ fun StairApp(context: Context) {
 
         selectedDate?.let { date ->
 
-            var floorText by remember(date) {
-                mutableStateOf("")
+            val existing =
+                records.firstOrNull {
+
+                    it.uid == uid &&
+                    it.date ==
+                        date.toString()
+                }
+
+            var floorText by remember(
+                date,
+                existing?.id
+            ) {
+
+                mutableStateOf(
+                    existing
+                        ?.floors
+                        ?.toString()
+                        ?: ""
+                )
             }
 
             AlertDialog(
@@ -570,6 +867,7 @@ fun StairApp(context: Context) {
                 },
 
                 title = {
+
                     Text(
                         "${date.monthValue}월 ${date.dayOfMonth}일"
                     )
@@ -580,24 +878,32 @@ fun StairApp(context: Context) {
                     Column {
 
                         Text(
-                            "오늘 오른 층수를 입력하세요."
+                            "오른 층수를 입력하세요."
                         )
 
                         Spacer(
-                            Modifier.height(10.dp)
+                            Modifier.height(
+                                10.dp
+                            )
                         )
 
                         OutlinedTextField(
                             value = floorText,
+
                             onValueChange = {
+
                                 floorText =
-                                    it.filter(
-                                        Char::isDigit
-                                    )
+                                    it
+                                        .filter(
+                                            Char::isDigit
+                                        )
+                                        .take(4)
                             },
+
                             label = {
                                 Text("층수")
                             },
+
                             suffix = {
                                 Text("층")
                             }
@@ -621,10 +927,13 @@ fun StairApp(context: Context) {
                                                 ?: 0
 
                                         floorText =
-                                            (old + n)
-                                                .toString()
+                                            (
+                                                old +
+                                                n
+                                            ).toString()
                                     }
                                 ) {
+
                                     Text("+$n")
                                 }
                             }
@@ -644,37 +953,144 @@ fun StairApp(context: Context) {
 
                             if (
                                 floor > 0 &&
-                                myName.isNotBlank()
+                                myName.isNotBlank() &&
+                                uid.isNotBlank()
                             ) {
 
-                                records.add(
-                                    Record(
-                                        myName,
-                                        floor,
-                                        date.toString()
+                                val data =
+                                    hashMapOf(
+                                        "uid" to uid,
+                                        "name" to myName,
+                                        "floors" to floor,
+                                        "date" to date.toString(),
+                                        "createdAt" to (
+                                            existing
+                                                ?.createdAt
+                                                ?: Timestamp.now()
+                                        )
                                     )
-                                )
 
-                                save()
+                                if (
+                                    existing == null
+                                ) {
 
-                                selectedDate = null
+                                    db.collection(
+                                        "records"
+                                    ).add(data)
+
+                                } else {
+
+                                    db.collection(
+                                        "records"
+                                    )
+                                        .document(
+                                            existing.id
+                                        )
+                                        .set(data)
+                                }
+
+                                selectedDate =
+                                    null
                             }
                         }
                     ) {
-                        Text("기록 저장")
+
+                        Text(
+                            if (
+                                existing == null
+                            )
+                                "기록 저장"
+                            else
+                                "기록 수정"
+                        )
                     }
                 },
 
                 dismissButton = {
 
-                    TextButton(
-                        onClick = {
-                            selectedDate = null
-                        }
+                    if (
+                        existing != null
                     ) {
-                        Text("취소")
+
+                        TextButton(
+                            onClick = {
+
+                                db.collection(
+                                    "records"
+                                )
+                                    .document(
+                                        existing.id
+                                    )
+                                    .delete()
+
+                                selectedDate =
+                                    null
+                            }
+                        ) {
+
+                            Text(
+                                "삭제",
+                                color = Color.Red
+                            )
+                        }
+
+                    } else {
+
+                        TextButton(
+                            onClick = {
+                                selectedDate =
+                                    null
+                            }
+                        ) {
+
+                            Text("취소")
+                        }
                     }
                 }
+            )
+        }
+    }
+}
+
+@Composable
+fun StatCard(
+    title: String,
+    value: Int,
+    modifier: Modifier
+) {
+
+    Surface(
+        modifier = modifier,
+
+        shape =
+            RoundedCornerShape(
+                17.dp
+            ),
+
+        color = Color.White
+    ) {
+
+        Column(
+            modifier =
+                Modifier.padding(
+                    vertical = 12.dp
+                ),
+
+            horizontalAlignment =
+                Alignment.CenterHorizontally
+        ) {
+
+            Text(
+                title,
+                fontSize = 10.sp,
+                color = Color.Gray
+            )
+
+            Text(
+                "${value}층",
+                fontSize = 18.sp,
+                fontWeight =
+                    FontWeight.Black
             )
         }
     }
