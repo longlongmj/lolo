@@ -7,13 +7,10 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Person
@@ -42,36 +39,34 @@ data class StairRecord(
     val memo: String = ""
 )
 
-data class RankRow(
-    val name: String,
-    val floors: Int,
-    val count: Int
-)
-
-enum class RankMode { MONTH, ALL, TODAY }
+enum class RankMode {
+    MONTH, ALL, TODAY
+}
 
 class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContent {
-            StairsClubApp(this)
+            StairApp(this)
         }
     }
 }
 
-private val Bg = Color(0xFFF6F7F9)
-private val CardBg = Color.White
-private val Ink = Color(0xFF17191F)
-private val Muted = Color(0xFF858A94)
-private val Soft = Color(0xFFF0F1F4)
-private val Line = Color(0xFFE7E9ED)
+private val AppBg = Color(0xFFF5F6F8)
+private val CardColor = Color.White
+private val MainText = Color(0xFF181A20)
+private val SubText = Color(0xFF858A94)
+private val SoftColor = Color(0xFFF0F1F4)
+private val DividerColor = Color(0xFFE8E9ED)
 
 @Composable
-fun StairsClubApp(context: Context) {
+fun StairApp(context: Context) {
 
     val prefs = remember {
         context.getSharedPreferences(
-            "stairs_local",
+            "stairs_app",
             Context.MODE_PRIVATE
         )
     }
@@ -86,38 +81,10 @@ fun StairsClubApp(context: Context) {
         mutableStateListOf<StairRecord>().apply {
             addAll(
                 loadRecords(
-                    prefs.getString("records_json", "[]") ?: "[]"
+                    prefs.getString("records", "[]") ?: "[]"
                 )
             )
         }
     }
 
-    var month by remember {
-        mutableStateOf(YearMonth.now())
-    }
-
-    var selectedDate by remember {
-        mutableStateOf<LocalDate?>(null)
-    }
-
-    var showProfile by remember {
-        mutableStateOf(profileName.isBlank())
-    }
-
-    var rankMode by remember {
-        mutableStateOf(RankMode.MONTH)
-    }
-
-    var myHistoryOnly by remember {
-        mutableStateOf(false)
-    }
-
-    fun persist() {
-        prefs.edit()
-            .putString("profile_name", profileName)
-            .putString("records_json", saveRecords(records))
-            .apply()
-    }
-
-    MaterialTheme(
-        colorScheme = lightColor
+    var selected
