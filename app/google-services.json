@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "950051763953",
+    "project_id": "stairs-2dd28",
+    "storage_bucket": "stairs-2dd28.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:950051763953:android:961557e87e028720481b50",
+        "android_client_info": {
+          "package_name": "com.stairsclub.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB0icAAo45RXplQvVs05RRLQchfTt00Nvc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
