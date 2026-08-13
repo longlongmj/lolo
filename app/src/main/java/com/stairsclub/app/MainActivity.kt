@@ -802,7 +802,7 @@ fun StairApp(context: Context) {
                         },
 
                         placeholder = {
-                            Text("예: 밍리")
+                            Text("예: 소동")
                         }
                     )
                 },
