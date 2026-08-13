@@ -1,1 +1,641 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#fff8fc">
 
+  <title>계단모임</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+                   "Noto Sans KR", sans-serif;
+      background: #fff8fc;
+      color: #222;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: auto;
+      padding: 24px 18px 60px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 5px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #777;
+      margin-bottom: 30px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 18px;
+      box-shadow: 0 3px 15px rgba(0,0,0,0.06);
+    }
+
+    h2 {
+      margin-top: 0;
+      font-size: 19px;
+    }
+
+    input, button {
+      width: 100%;
+      padding: 14px;
+      margin-top: 10px;
+      border-radius: 12px;
+      font-size: 16px;
+    }
+
+    input {
+      border: 1px solid #ddd;
+      background: white;
+    }
+
+    button {
+      border: none;
+      background: #222;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:active {
+      opacity: .7;
+    }
+
+    .status {
+      text-align: center;
+      font-size: 13px;
+      color: #777;
+      margin-bottom: 15px;
+    }
+
+    .record {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 3px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .record:last-child {
+      border-bottom: none;
+    }
+
+    .record-name {
+      font-weight: bold;
+    }
+
+    .record-info {
+      font-size: 14px;
+      color: #666;
+      margin-top: 4px;
+    }
+
+    .delete {
+      width: auto;
+      padding: 7px 10px;
+      margin: 0;
+      background: #eee;
+      color: #777;
+      font-size: 12px;
+    }
+
+    .ranking {
+      padding: 12px 0;
+      border-bottom: 1px solid #eee;
+      font-size: 17px;
+    }
+
+    .ranking:last-child {
+      border-bottom: none;
+    }
+
+    .empty {
+      color: #999;
+      text-align: center;
+      padding: 20px 0;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <h1>🪜 계단모임</h1>
+  <div class="subtitle">오늘도 한 층씩 💪</div>
+
+  <div id="status" class="status">
+    Firebase 연결 중...
+  </div>
+
+  <div class="card">
+    <h2>계단 기록하기</h2>
+
+    <input
+      id="name"
+      type="text"
+      placeholder="이름"
+    >
+
+    <input
+      id="floor"
+      type="number"
+      inputmode="numeric"
+      placeholder="몇 층?"
+    >
+
+    <button id="saveButton">
+      기록 저장
+    </button>
+  </div>
+
+
+  <div class="card">
+    <h2>🏆 실시간 랭킹</h2>
+
+    <div id="ranking">
+      <div class="empty">기록이 없습니다.</div>
+    </div>
+  </div>
+
+
+  <div class="card">
+    <h2>📋 최근 기록</h2>
+
+    <div id="records">
+      <div class="empty">기록이 없습니다.</div>
+    </div>
+  </div>
+
+</div>
+
+
+<script type="module">
+
+import {
+  initializeApp
+} from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  deleteDoc,
+  doc,
+  onSnapshot,
+  serverTimestamp,
+  query,
+  orderBy
+} from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+
+
+/* ==========================
+   FIREBASE 설정
+========================== */
+
+const firebaseConfig = {
+
+  apiKey:
+  "AIzaSyBjJlAoro5jzAtDUYX9BgtDdM3v0C6ctTY",
+
+  authDomain:
+  "stairs-2dd28.firebaseapp.com",
+
+  projectId:
+  "stairs-2dd28",
+
+  storageBucket:
+  "stairs-2dd28.firebasestorage.app",
+
+  messagingSenderId:
+  "950051763953",
+
+  appId:
+  "1:950051763953:web:6fad2beffc2bf5fe481b50"
+
+};
+
+
+/* Firebase 시작 */
+
+const app = initializeApp(firebaseConfig);
+
+const db = getFirestore(app);
+
+
+/* ==========================
+   화면 요소
+========================== */
+
+const nameInput =
+document.getElementById("name");
+
+const floorInput =
+document.getElementById("floor");
+
+const saveButton =
+document.getElementById("saveButton");
+
+const recordsBox =
+document.getElementById("records");
+
+const rankingBox =
+document.getElementById("ranking");
+
+const statusBox =
+document.getElementById("status");
+
+
+/* ==========================
+   기록 저장
+========================== */
+
+saveButton.addEventListener(
+"click",
+async () => {
+
+  const name =
+  nameInput.value.trim();
+
+  const floor =
+  Number(floorInput.value);
+
+
+  if (!name) {
+
+    alert("이름을 입력해주세요.");
+
+    return;
+  }
+
+
+  if (!floor || floor < 1) {
+
+    alert("층수를 입력해주세요.");
+
+    return;
+  }
+
+
+  try {
+
+    saveButton.disabled = true;
+
+    saveButton.textContent =
+    "저장 중...";
+
+
+    await addDoc(
+      collection(db, "records"),
+      {
+        name: name,
+
+        floor: floor,
+
+        createdAt:
+        serverTimestamp()
+      }
+    );
+
+
+    localStorage.setItem(
+      "stairs-name",
+      name
+    );
+
+
+    floorInput.value = "";
+
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert(
+      "저장 실패\n\n" +
+      error.message
+    );
+
+  } finally {
+
+    saveButton.disabled = false;
+
+    saveButton.textContent =
+    "기록 저장";
+  }
+
+});
+
+
+/* ==========================
+   이름 기억
+========================== */
+
+const savedName =
+localStorage.getItem(
+  "stairs-name"
+);
+
+if (savedName) {
+
+  nameInput.value =
+  savedName;
+}
+
+
+/* ==========================
+   Firestore 실시간 감시
+========================== */
+
+const recordsQuery =
+query(
+  collection(db, "records"),
+  orderBy("createdAt", "desc")
+);
+
+
+onSnapshot(
+
+  recordsQuery,
+
+  (snapshot) => {
+
+    statusBox.textContent =
+    "🟢 실시간 연결됨";
+
+
+    const records = [];
+
+
+    snapshot.forEach(
+      (documentSnapshot) => {
+
+        records.push({
+
+          id:
+          documentSnapshot.id,
+
+          ...documentSnapshot.data()
+
+        });
+
+      }
+    );
+
+
+    showRecords(records);
+
+    showRanking(records);
+
+  },
+
+  (error) => {
+
+    console.error(error);
+
+    statusBox.textContent =
+    "🔴 Firebase 연결 오류";
+
+  }
+
+);
+
+
+/* ==========================
+   최근 기록 표시
+========================== */
+
+function showRecords(records) {
+
+  recordsBox.innerHTML = "";
+
+
+  if (records.length === 0) {
+
+    recordsBox.innerHTML =
+    '<div class="empty">기록이 없습니다.</div>';
+
+    return;
+  }
+
+
+  records.forEach(record => {
+
+    const item =
+    document.createElement("div");
+
+    item.className =
+    "record";
+
+
+    const left =
+    document.createElement("div");
+
+
+    const name =
+    document.createElement("div");
+
+    name.className =
+    "record-name";
+
+    name.textContent =
+    record.name || "이름 없음";
+
+
+    const info =
+    document.createElement("div");
+
+    info.className =
+    "record-info";
+
+
+    let dateText = "";
+
+
+    if (
+      record.createdAt &&
+      record.createdAt.toDate
+    ) {
+
+      dateText =
+      record.createdAt
+      .toDate()
+      .toLocaleString("ko-KR");
+
+    }
+
+
+    info.textContent =
+    `${record.floor || 0}층 ${dateText}`;
+
+
+    left.appendChild(name);
+
+    left.appendChild(info);
+
+
+    const deleteButton =
+    document.createElement("button");
+
+    deleteButton.className =
+    "delete";
+
+    deleteButton.textContent =
+    "삭제";
+
+
+    deleteButton.onclick =
+    async () => {
+
+      if (
+        !confirm(
+          "이 기록을 삭제할까요?"
+        )
+      ) return;
+
+
+      try {
+
+        await deleteDoc(
+          doc(
+            db,
+            "records",
+            record.id
+          )
+        );
+
+      } catch (error) {
+
+        alert(
+          "삭제 실패\n" +
+          error.message
+        );
+
+      }
+
+    };
+
+
+    item.appendChild(left);
+
+    item.appendChild(
+      deleteButton
+    );
+
+
+    recordsBox.appendChild(
+      item
+    );
+
+  });
+
+}
+
+
+/* ==========================
+   랭킹 계산
+========================== */
+
+function showRanking(records) {
+
+  const totals = {};
+
+
+  records.forEach(record => {
+
+    const name =
+    record.name || "이름 없음";
+
+    const floor =
+    Number(record.floor) || 0;
+
+
+    if (!totals[name]) {
+
+      totals[name] = 0;
+
+    }
+
+
+    totals[name] += floor;
+
+  });
+
+
+  const ranking =
+  Object.entries(totals)
+  .sort(
+    (a, b) =>
+    b[1] - a[1]
+  );
+
+
+  rankingBox.innerHTML = "";
+
+
+  if (ranking.length === 0) {
+
+    rankingBox.innerHTML =
+    '<div class="empty">기록이 없습니다.</div>';
+
+    return;
+  }
+
+
+  ranking.forEach(
+    ([name, floor], index) => {
+
+      const item =
+      document.createElement("div");
+
+      item.className =
+      "ranking";
+
+
+      let medal = "";
+
+
+      if (index === 0)
+        medal = "🥇";
+
+      else if (index === 1)
+        medal = "🥈";
+
+      else if (index === 2)
+        medal = "🥉";
+
+      else
+        medal = `${index + 1}.`;
+
+
+      item.textContent =
+      `${medal} ${name} — ${floor}층`;
+
+
+      rankingBox.appendChild(
+        item
+      );
+
+    }
+  );
+
+}
+
+</script>
+
+</body>
+</html>
